@@ -67,7 +67,6 @@ doc/doxygen-build.stamp
 doc/html
 doc/latex
 doc/man
-package_version
 version.h
 celt/Debug
 celt/Release

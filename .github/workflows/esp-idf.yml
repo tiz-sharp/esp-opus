@@ -44,3 +44,9 @@ jobs:
           . "$IDF_PATH/export.sh"
           idf.py set-target ${{ matrix.target }}
           idf.py build
+
+      - name: Upload library artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libesp_opus-${{ matrix.target }}
+          path: ${{ env.PROJECT_DIR }}/build/esp-idf/esp_opus/libesp_opus.a

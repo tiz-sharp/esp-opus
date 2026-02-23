@@ -1,0 +1,5 @@
+# Version aligned with upstream xiph/opus (libopus).
+# Set AUTO_UPDATE=no so version stays fixed until you update it after merging upstream.
+AUTO_UPDATE=no
+
+PACKAGE_VERSION="1.6"

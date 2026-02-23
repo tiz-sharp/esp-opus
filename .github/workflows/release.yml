@@ -1,0 +1,72 @@
+# On tag v*.*.*: build esp-opus for esp32 + esp32s3 and create GitHub Release with versioned libraries.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROJECT_DIR: .ci/esp32_project
+  COMPONENT_DIR: .ci/esp32_project/components/esp_opus
+
+jobs:
+  release:
+    name: Build and release
+    runs-on: ubuntu-22.04
+    container:
+      image: espressif/idf:v5.1.2
+      options: --user root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Allow git in container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Prepare component
+        run: |
+          mkdir -p ${{ env.COMPONENT_DIR }}
+          git archive HEAD | tar -x -C ${{ env.COMPONENT_DIR }}
+
+      - name: Build esp32
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py set-target esp32
+          idf.py build
+
+      - name: Save esp32 library
+        run: |
+          VER=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          cp "${{ env.PROJECT_DIR }}/build/esp-idf/esp_opus/libesp_opus.a" "${GITHUB_WORKSPACE}/libesp_opus-${VER}-esp32.a"
+
+      - name: Build esp32s3
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py fullclean
+          idf.py set-target esp32s3
+          idf.py build
+
+      - name: Save esp32s3 library
+        run: |
+          VER=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          cp "${{ env.PROJECT_DIR }}/build/esp-idf/esp_opus/libesp_opus.a" "${GITHUB_WORKSPACE}/libesp_opus-${VER}-esp32s3.a"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          generate_release_notes: true
+          files: |
+            libesp_opus-*-esp32.a
+            libesp_opus-*-esp32s3.a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
