@@ -1,7 +1,11 @@
-# ESP-IDF component build when this repo is used in components/ of an IDF project.
-# Otherwise (desktop/CI) the full upstream CMake runs below.
-# Use IDF_PATH (set only by ESP-IDF) so desktop/Android/other CI do not enter this block.
-if(DEFINED IDF_PATH)
+# -----------------------------------------------------------------------------
+# Dual build: ESP-IDF component (when included by an IDF project) vs desktop/CI
+# (when this file is the top-level project, e.g. cmake .. from build/).
+# Guard: run ESP block only when COMPONENT_DIR is set (ESP-IDF sets it when
+# loading a component). This avoids desktop/Android CI entering the ESP block.
+# -----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.16)
+if(DEFINED COMPONENT_DIR)
 set(CELT_SOURCES
     celt/bands.c
     celt/celt.c
@@ -187,8 +191,8 @@ set(OPUS_COMPILE_OPTIONS
     -Wno-unused-variable
 )
 
-# 根据芯片类型添加特定选项
-if(IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3")
+# 根据芯片类型添加特定选项 (safe: only when IDF_TARGET is set)
+if(DEFINED IDF_TARGET AND (IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3"))
     list(APPEND OPUS_COMPILE_OPTIONS -DOPUS_XTENSA_LX7)
 endif()
 
@@ -201,7 +205,6 @@ return()
 endif()
 
 # Desktop / CI: full upstream CMake (for GitHub Actions, Autotools, etc.)
-cmake_minimum_required(VERSION 3.16)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(OpusPackageVersion)
