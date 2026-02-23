@@ -1,10 +1,15 @@
-# On tag v*.*.*: build esp-opus for esp32 + esp32s3 and create GitHub Release with versioned libraries.
+# On tag v*.*.*: build esp32 + esp32s3 in parallel (quick: only these two targets), then create GitHub Release.
 name: Release
 
 on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for release (e.g. 1.6.0)'
+        required: false
 
 concurrency:
   group: release-${{ github.ref }}
@@ -15,9 +20,13 @@ env:
   COMPONENT_DIR: .ci/esp32_project/components/esp_opus
 
 jobs:
-  release:
-    name: Build and release
+  build:
+    name: Build ${{ matrix.target }}
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32s3]
     container:
       image: espressif/idf:v5.1.2
       options: --user root
@@ -35,38 +44,42 @@ jobs:
           mkdir -p ${{ env.COMPONENT_DIR }}
           git archive HEAD | tar -x -C ${{ env.COMPONENT_DIR }}
 
-      - name: Build esp32
+      - name: Build
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           . "$IDF_PATH/export.sh"
-          idf.py set-target esp32
+          idf.py set-target ${{ matrix.target }}
           idf.py build
 
-      - name: Save esp32 library
+      - name: Upload library
         run: |
-          VER=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          cp "${{ env.PROJECT_DIR }}/build/esp-idf/esp_opus/libesp_opus.a" "${GITHUB_WORKSPACE}/libesp_opus-${VER}-esp32.a"
+          VER="${{ github.event.inputs.version || github.ref_name }}"
+          VER=$(echo "$VER" | sed 's/^v//')
+          cp "${{ env.PROJECT_DIR }}/build/esp-idf/esp_opus/libesp_opus.a" "${GITHUB_WORKSPACE}/libesp_opus-${VER}-${{ matrix.target }}.a"
 
-      - name: Build esp32s3
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: |
-          . "$IDF_PATH/export.sh"
-          idf.py fullclean
-          idf.py set-target esp32s3
-          idf.py build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lib-${{ matrix.target }}
+          path: libesp_opus-*-${{ matrix.target }}.a
 
-      - name: Save esp32s3 library
-        run: |
-          VER=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          cp "${{ env.PROJECT_DIR }}/build/esp-idf/esp_opus/libesp_opus.a" "${GITHUB_WORKSPACE}/libesp_opus-${VER}-esp32s3.a"
+  release:
+    name: Create Release
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: lib-*
+          path: release-files
+          merge-multiple: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: false
           generate_release_notes: true
-          files: |
-            libesp_opus-*-esp32.a
-            libesp_opus-*-esp32s3.a
+          files: release-files/*.a
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
