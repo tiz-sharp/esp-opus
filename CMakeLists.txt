@@ -1,6 +1,7 @@
 # ESP-IDF component build when this repo is used in components/ of an IDF project.
 # Otherwise (desktop/CI) the full upstream CMake runs below.
-if(DEFINED IDF_TARGET)
+# Use IDF_PATH (set only by ESP-IDF) so desktop/Android/other CI do not enter this block.
+if(DEFINED IDF_PATH)
 set(CELT_SOURCES
     celt/bands.c
     celt/celt.c
@@ -187,7 +188,7 @@ set(OPUS_COMPILE_OPTIONS
 )
 
 # 根据芯片类型添加特定选项
-if(${IDF_TARGET} STREQUAL "esp32s2" OR ${IDF_TARGET} STREQUAL "esp32s3")
+if(IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3")
     list(APPEND OPUS_COMPILE_OPTIONS -DOPUS_XTENSA_LX7)
 endif()
 

@@ -15,6 +15,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fix git safe.directory for container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Prepare component in project
         run: |
           mkdir -p .ci/esp32_project/components/esp_opus
@@ -36,6 +39,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Fix git safe.directory for container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Prepare component in project
         run: |
