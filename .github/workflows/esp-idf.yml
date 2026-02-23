@@ -1,0 +1,49 @@
+# Build esp-opus as ESP-IDF component (ESP32) to ensure the IDF path in CMakeLists.txt works
+name: ESP-IDF
+
+on: [push, pull_request]
+
+jobs:
+  ESP32:
+    name: ESP-IDF/esp32
+    runs-on: ubuntu-22.04
+    container:
+      image: espressif/idf:v5.1.2
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare component in project
+        run: |
+          mkdir -p .ci/esp32_project/components/esp_opus
+          git archive HEAD | tar -x -C .ci/esp32_project/components/esp_opus
+
+      - name: Set IDF target and build
+        working-directory: .ci/esp32_project
+        run: |
+          idf.py set-target esp32
+          idf.py build
+
+  ESP32S3:
+    name: ESP-IDF/esp32s3
+    runs-on: ubuntu-22.04
+    container:
+      image: espressif/idf:v5.1.2
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare component in project
+        run: |
+          mkdir -p .ci/esp32_project/components/esp_opus
+          git archive HEAD | tar -x -C .ci/esp32_project/components/esp_opus
+
+      - name: Set IDF target and build
+        working-directory: .ci/esp32_project
+        run: |
+          idf.py set-target esp32s3
+          idf.py build

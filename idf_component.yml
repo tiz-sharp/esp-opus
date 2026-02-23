@@ -1,15 +1,11 @@
-url: https://github.com/78/esp-opus.git
-version: 1.0.5
+url: https://github.com/tiz-sharp/esp-opus
+description: OPUS for ESP32 (ESP-IDF 5.x)
 dependencies:
-  idf: '>=5.0'
-description: OPUS for ESP32
+  idf: "*"
 files:
   exclude:
-  - .github
-  - doc/**/*
-  - tests/**/*
-repository: git://github.com/78/esp-opus.git
-repository_info:
-  commit_sha: 5854a9f7de06ab3505b8fe6e8943db581c2cbe70
-  path: .
-license: "MIT"
+    - .github
+    - doc/**/*
+    - tests/**/*
+repository: https://github.com/tiz-sharp/esp-opus
+license: MIT
