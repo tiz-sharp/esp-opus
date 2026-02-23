@@ -41,5 +41,6 @@ jobs:
       - name: Build
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
+          . "$IDF_PATH/export.sh"
           idf.py set-target ${{ matrix.target }}
           idf.py build
