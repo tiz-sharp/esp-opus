@@ -1,5 +1,6 @@
 #include "opus.h"
 #include "esp_log.h"
+#include <stddef.h>
 
 static const char *TAG = "opus_ci";
 
