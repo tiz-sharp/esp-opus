@@ -1,6 +1,6 @@
 url: https://github.com/tiz-sharp/esp-opus
 description: OPUS for ESP32 (ESP-IDF 5.x)
-version: "1.6"
+version: "1.6.0"
 dependencies:
   idf: "*"
 files:
